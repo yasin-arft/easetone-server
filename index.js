@@ -37,6 +37,12 @@ async function run() {
 
     const productCollection = client.db('easeTone').collection('products');
 
+    app.get('/products-count', async (req, res) => {
+      const totalProducts = await productCollection.estimatedDocumentCount();
+
+      res.send({ totalProducts });
+    });
+
     app.get('/products', async (req, res) => {
       const result = await productCollection.find().toArray();
 
