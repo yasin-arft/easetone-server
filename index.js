@@ -36,7 +36,8 @@ async function run() {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     const productCollection = client.db('easeTone').collection('products');
-
+  
+    // products related apis
     app.get('/products-count', async (req, res) => {
       const totalProducts = await productCollection.estimatedDocumentCount();
 
@@ -44,7 +45,8 @@ async function run() {
     });
 
     app.get('/products', async (req, res) => {
-      const result = await productCollection.find().toArray();
+      const page = req.query.page;
+      const result = await productCollection.find().skip(page * 8).limit(8).toArray();
 
       res.send(result);
     });
