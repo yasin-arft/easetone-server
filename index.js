@@ -45,15 +45,38 @@ async function run() {
     });
 
     app.get('/products', async (req, res) => {
-      const page = req.query.page;
-      const search = req.query.search;
+      const { page = 0, search = '', brand = '', category = '', minPrice, maxPrice } = req.query;
+
+      // for search
       if (search) {
         const regex = new RegExp(search, 'i');
+        const searchedProducts = await productCollection.find({ name: { $regex: regex } }).toArray();
 
-       
-        const results = await productCollection.find({ name: { $regex: regex } }).toArray();
+        return res.send(searchedProducts);
+      }
 
-        return res.send(results);
+      // for filter
+      if (brand || category || minPrice || maxPrice) {
+        const query = {};
+
+        if (brand) {
+          query.brand = { $regex: new RegExp(brand, 'i')};
+        }
+
+        if (category) {
+          query.category = {$regex: new RegExp(category, 'i')};
+        }
+
+        if (minPrice && maxPrice) {
+          query.price = { $gte: parseFloat(minPrice), $lte: parseFloat(maxPrice) };
+        } else if (minPrice) {
+          query.price = { $gte: parseFloat(minPrice) };
+        } else if (maxPrice) {
+          query.price = { $lte: parseFloat(maxPrice) };
+        }
+
+        const result = await productCollection.find(query).toArray();
+        return res.send(result);
       }
 
       const result = await productCollection.find().skip(page * 8).limit(8).toArray();
