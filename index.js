@@ -45,12 +45,24 @@ async function run() {
     });
 
     app.get('/products', async (req, res) => {
-      const { page = 0, search = '', brand = '', category = '', minPrice, maxPrice } = req.query;
+      const { page = 0, search = '', brand = '', category = '', minPrice, maxPrice, sort = '' } = req.query;
+
+      // sort option
+      let sortOptions = {}
+
+      if (sort) {
+        sortOptions = {
+          price: sort === 'asc' ? 1 : -1,
+          creationDate: -1
+        }
+      } else {
+        sortOptions = {}
+      }
 
       // for search
       if (search) {
         const regex = new RegExp(search, 'i');
-        const searchedProducts = await productCollection.find({ name: { $regex: regex } }).toArray();
+        const searchedProducts = await productCollection.find({ name: { $regex: regex } }).sort(sortOptions).toArray();
 
         return res.send(searchedProducts);
       }
@@ -60,11 +72,11 @@ async function run() {
         const query = {};
 
         if (brand) {
-          query.brand = { $regex: new RegExp(brand, 'i')};
+          query.brand = { $regex: new RegExp(brand, 'i') };
         }
 
         if (category) {
-          query.category = {$regex: new RegExp(category, 'i')};
+          query.category = { $regex: new RegExp(category, 'i') };
         }
 
         if (minPrice && maxPrice) {
@@ -75,11 +87,11 @@ async function run() {
           query.price = { $lte: parseFloat(maxPrice) };
         }
 
-        const result = await productCollection.find(query).toArray();
+        const result = await productCollection.find(query).sort(sortOptions).skip(page * 8).limit(8).toArray();
         return res.send(result);
       }
 
-      const result = await productCollection.find().skip(page * 8).limit(8).toArray();
+      const result = await productCollection.find().sort(sortOptions).skip(page * 8).limit(8).toArray();
 
       return res.send(result);
     });
