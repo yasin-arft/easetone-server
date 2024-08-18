@@ -35,3 +35,5 @@ node start
 ### 5: Open the project in your browser
 
 Done!
+
+Or you can use my live server: https://easetoneserver.vercel.app/products
